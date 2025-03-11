@@ -1,28 +1,50 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+const cors = require('cors');
+require('dotenv').config();
 
-// Load environment variables
-dotenv.config();
-
-// Initialize express
 const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 
-// Database connection
-require('./config/connect');
+// Set up Swagger
+require('./swagger')(app);
+
+// Connect to MongoDB
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log('MongoDB Connected...');
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
+};
+
+// Only connect to DB when not in production (Vercel will handle connections in serverless functions)
+if (process.env.NODE_ENV !== 'production') {
+  connectDB();
+}
 
 // Routes
-app.use('/api/users', require('./routes/users'));
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
 
-// Default route
 app.get('/', (req, res) => {
-  res.send('User Management API is running');
+  res.json({ message: 'API Running' });
 });
 
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Port setup
+const PORT = process.env.PORT || 5000;
+
+// Server only listens in development, not in Vercel production
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+}
+
+module.exports = app;
