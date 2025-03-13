@@ -8,20 +8,32 @@ const User = require('../models/User');
 // @access  Private
 router.post('/', auth, async (req, res) => {
   try {
+    console.log("p", req.user);
+    let user=await User.find({
+      _id: req.user.id
+    });
+    if(!user){
+      res.status(404).send('User not found');
+    }
     const { name, email, dob, gender, address } = req.body;
 
     // Create new user
-    const newUser = new User({
+    const newUser = await User.findOneAndUpdate(
+      {
+        _id: req.user.id
+      },
+      {
       name,
       email,
       dob,
       gender,
       address
-    });
-
-    // Save user
-    const user = await newUser.save();
-    res.json(user);
+    },
+  {
+    new: true
+  });
+  console.log(newUser);
+    res.json(newUser);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

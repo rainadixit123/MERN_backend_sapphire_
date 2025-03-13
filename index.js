@@ -27,9 +27,7 @@ const connectDB = async () => {
 };
 
 // Only connect to DB when not in production (Vercel will handle connections in serverless functions)
-if (process.env.NODE_ENV !== 'production') {
   connectDB();
-}
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

@@ -5,11 +5,9 @@ const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
 
 // Auth User model - separate from the main User model
-const AuthUser = require('../models/AuthUser');
+const AuthUser = require('../models/User');
 
-// @route   POST api/auth/register
-// @desc    Register a user
-// @access  Public
+
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
@@ -31,12 +29,12 @@ router.post('/register', async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
 
     // Save user
-    await user.save();
+    let obj=await user.save();
 
     // Create JWT payload
     const payload = {
       user: {
-        id: user.id
+        id: obj._id
       }
     };
 
