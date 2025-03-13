@@ -3,9 +3,28 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 
-// @route   POST api/users
-// @desc    Create a user
-// @access  Private
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *     security:
+ *       - apiKeyAuth : []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       200:
+ *         description: User created successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 router.post('/', auth, async (req, res) => {
   try {
     console.log("p", req.user);
@@ -17,7 +36,6 @@ router.post('/', auth, async (req, res) => {
     }
     const { name, email, dob, gender, address } = req.body;
 
-    // Create new user
     const newUser = await User.findOneAndUpdate(
       {
         _id: req.user.id
@@ -40,9 +58,23 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// @route   GET api/users
-// @desc    Get all users
-// @access  Private
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - apiKeyAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all users
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -53,9 +85,31 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// @route   GET api/users/:id
-// @desc    Get user by ID
-// @access  Private
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: User found
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -74,14 +128,40 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
-// @route   PUT api/users/:id
-// @desc    Update a user
-// @access  Private
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   put:
+ *     summary: Update user by ID
+ *     tags: [Users]
+ *     security:
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.put('/:id', auth, async (req, res) => {
   try {
     const { name, email, dob, gender, address } = req.body;
     
-    // Build user object
     const userFields = {};
     if (name) userFields.name = name;
     if (email) userFields.email = email;
@@ -95,7 +175,6 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Update
     user = await User.findByIdAndUpdate(
       req.params.id,
       { $set: userFields },
@@ -112,9 +191,31 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// @route   DELETE api/users/:id
-// @desc    Delete a user
-// @access  Private
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete user by ID
+ *     tags: [Users]
+ *     security:
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.delete('/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

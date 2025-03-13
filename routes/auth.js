@@ -4,41 +4,60 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
 
-// Auth User model - separate from the main User model
 const AuthUser = require('../models/User');
 
-
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: ['username', 'password']
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *       400:
+ *         description: User already exists
+ *       500:
+ *         description: Server error
+ */
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Check if user already exists
     let user = await AuthUser.findOne({ username });
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create new user
     user = new AuthUser({
       username,
       password
     });
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
 
-    // Save user
     let obj=await user.save();
 
-    // Create JWT payload
     const payload = {
       user: {
         id: obj._id
       }
     };
 
-    // Generate token
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -54,30 +73,54 @@ router.post('/register', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: ['username', 'password']
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Server error
+ */
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
   
     try {
-      // Check if user exists
       const user = await AuthUser.findOne({ username });
       if (!user) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
   
-      // Check password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
   
-      // Create JWT payload
       const payload = {
         user: {
           id: user.id
         }
       };
   
-      // Generate token
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
